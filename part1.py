@@ -61,7 +61,7 @@ class Belief:
     def __init__(self):
         print("2019101050 2019101049")
         print(x, y)
-        debug = True
+        debug = False
         b = [1 / 3, 0, 1 / 3, 0, 0, 1 / 3]
         printer(b)
         b_prime: List[float] = [0.0 for _ in range(num_states)]
