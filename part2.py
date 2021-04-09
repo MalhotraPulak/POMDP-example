@@ -16,6 +16,9 @@ class State:
         idx = 2 * (self.a_x * 16 + self.a_y * 8 + self.t_x * 2 + self.t_y) + self.call
         return idx
 
+    def __str__(self):
+        return f"(({self.a_x},{self.a_y}),({self.t_x},{self.t_y}),{self.call})"
+
     def get_a_pos(self):
         return (self.a_x, self.a_y)
 
@@ -63,6 +66,7 @@ class POMDP:
     def apply_transition(self, state: State, action):
         results = []
         # Agent Movements
+        # print(action)
         if action == Actions.RIGHT:
             new_state = deepcopy(state)
             new_state.increase_x()
@@ -93,7 +97,6 @@ class POMDP:
             results.append((x, new_state))
         elif action == Actions.STAY:
             results.append((1, state))
-
         movements_results = []
         # APPLY TARGET MOVEMENT
         for pr, state in results:
@@ -117,9 +120,19 @@ class POMDP:
             next_state.t_decrease_y()
             movements_results.append((0.1 * pr, next_state))
 
+        # FILTER MOVEMENT RESULTS
+        filter_movements = []
+        unique_states = set([st.get_id() for pr, st in movements_results])
+        for st in unique_states:
+            prt = 0.0
+            for pr, st2 in movements_results:
+                if st2.get_id() == st:
+                    prt += pr
+            filter_movements.append((prt, self.states[st]))
+
         final_results: List[Tuple[float, State]] = []
         if state.call == 0:
-            for pr, state in final_results:
+            for pr, state in filter_movements:
                 # CALL IS ON
                 next_state = deepcopy(state)
                 final_results.append((pr * 0.5, next_state))
@@ -128,7 +141,7 @@ class POMDP:
                 next_state.call = 1
                 final_results.append((pr * 0.5, next_state))
         elif state.call == 1:
-            for pr, state in final_results:
+            for pr, state in filter_movements:
                 # CALL IS ON
                 next_state = deepcopy(state)
                 final_results.append((pr * 0.9, next_state))
@@ -136,6 +149,23 @@ class POMDP:
                 next_state = deepcopy(state)
                 next_state.call = 0
                 final_results.append((pr * 0.1, next_state))
+
+        # for idx, (_, st) in enumerate(final_results):
+        #     for idx2, (_, st2) in enumerate(final_results):
+        #         if idx != idx2:
+        #             assert st.get_id() != st2.get_id()
+        total = 0.0
+        for (pr, _) in final_results:
+            total += pr
+        assert 0.99 < total < 1.01
+        return final_results
+
+    def transition_table(self):
+        for state in self.states:
+            for action in Actions:
+                rez = self.apply_transition(state, action)
+                for pr, res in rez:
+                    print(f"T: {action.value} : {state.get_id()} : {res.get_id()} {pr}", file=f)
 
     def observation_table(self):
         results = []
@@ -157,6 +187,8 @@ class POMDP:
                 results.append((Observations.o5, end_state))
             else:
                 results.append((Observations.o6, end_state))
+        for obs, state in results:
+            print(f"O : * : {state.get_id()} : {obs.value} {1.0}", file=f)
 
     def reward_table(self):
         results = []
@@ -167,6 +199,8 @@ class POMDP:
                     results.append((curr_obs, 20, state))
                 else:
                     results.append((curr_obs, -1, state))
+        for obs, reward, state in results:
+            print(f"R: * : * : {state.get_id()}: {obs.value} {reward}", file=f)
 
 
 if __name__ == "__main__":
@@ -175,6 +209,7 @@ if __name__ == "__main__":
     roll_no = 2019101050
     x = 1 - ((roll_no % 10000) % 30 + 1) / 100
     count = 0
+    f = open("res.pomdp", "w")
     for a_x in range(4):
         for a_y in range(2):
             for t_x in range(4):
@@ -186,4 +221,14 @@ if __name__ == "__main__":
 
     num_states = len(states)
     num_actions = len(Actions)
+    num_observation = len(Observations)
+    print("discount: 0.9999", file=f)
+    print("values: reward", file=f)
+    print("states:", num_states, file=f)
+    print("actions:", num_actions, file=f)
+    print("observations:", num_observation, file=f)
+    p = POMDP(states)
+    p.transition_table()
+    p.observation_table()
+    p.reward_table()
     pass
