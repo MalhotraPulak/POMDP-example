@@ -52,6 +52,10 @@ class Actions(Enum):
     STAY, UP, DOWN, LEFT, RIGHT = range(5)
 
 
+class Observations(Enum):
+    o1, o2, o3, o4, o5, o6 = range(6)
+
+
 class POMDP:
     def __init__(self, states):
         self.states = states
@@ -132,6 +136,37 @@ class POMDP:
                 next_state = deepcopy(state)
                 next_state.call = 0
                 final_results.append((pr * 0.1, next_state))
+
+    def observation_table(self):
+        results = []
+        for end_state in self.states:
+            pos_diff = (end_state.a_x - end_state.t_x, end_state.a_y - end_state.t_y)
+            if pos_diff == (0, 0):
+                results.append((Observations.o1, end_state))
+            elif pos_diff == (-1, 0):
+                # target is to right
+                results.append((Observations.o2, end_state))
+            elif pos_diff == (1, 0):
+                # target it to left
+                results.append((Observations.o4, end_state))
+            elif pos_diff == (0, -1):
+                # target is to down
+                results.append((Observations.o3, end_state))
+            elif pos_diff == (0, 1):
+                # target is up
+                results.append((Observations.o5, end_state))
+            else:
+                results.append((Observations.o6, end_state))
+
+    def reward_table(self):
+        results = []
+        for obs in range(len(Observations)):
+            for state in self.states:
+                curr_obs = Observations(obs)
+                if curr_obs == Observations.o1 and state.call == 1:
+                    results.append((curr_obs, 20, state))
+                else:
+                    results.append((curr_obs, -1, state))
 
 
 if __name__ == "__main__":
