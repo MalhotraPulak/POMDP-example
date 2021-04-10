@@ -1,15 +1,6 @@
 from typing import List
 from copy import deepcopy
 
-RIGHT = "R"
-LEFT = "L"
-GREEN = "G"
-RED = "R"
-num_states = 6
-roll_no = 2019101050
-x = 1 - ((roll_no % 10000) % 30 + 1) / 100
-y = (roll_no % 100) % 4
-
 
 def t(old_state, a, curr_state):
     if a == RIGHT:
@@ -39,15 +30,15 @@ def color(s):
 def O(new_state, a, o):
     if o == GREEN:
         if color(new_state) == GREEN:
-            return 0.85
+            return pgg
         elif color(new_state) == RED:
-            return 0.15
+            return 1 - pgg
         assert False
     if o == RED:
         if color(new_state) == RED:
-            return 0.9
+            return prr
         elif color(new_state) == GREEN:
-            return 0.1
+            return 1 - prr
         assert False
 
 
@@ -61,7 +52,7 @@ class Belief:
     def __init__(self):
         print("2019101050 2019101049")
         print(x, y)
-        debug = False
+        debug = True
         b = [1 / 3, 0, 1 / 3, 0, 0, 1 / 3]
         printer(b)
         b_prime: List[float] = [0.0 for _ in range(num_states)]
@@ -69,6 +60,7 @@ class Belief:
             for new_state in range(num_states):
                 if debug:
                     print(f"Calculating b_prime[{new_state}]")
+                    print(f"Move is {a}")
                 # prob_states = [t(old_state, a, new_state) * b[old_state] for old_state in range(num_states)]
                 transitions = [0 for _ in range(num_states)]
                 for old_state in range(num_states):
@@ -82,12 +74,13 @@ class Belief:
                     if debug:
                         print(
                             f"On multiplying by b[{old_state}]={round(b[old_state], 3)} gives {round(transitions[old_state], 3)}")
+
                 sum_transition = sum(transitions)
                 observation_prob = O(new_state, a, o)
                 b_prime[new_state] = sum_transition * observation_prob
                 if debug:
                     print("sum of transitions", sum_transition)
-                    print(f"P(o ={o}|a={a},s'={new_state}) = {observation_prob}")
+                    print(f"P(o={o}|a={a},s'={new_state}) = {observation_prob}")
                     print(f"b_prime[{new_state}]={b_prime[new_state]}")
                     print()
             numerator = deepcopy(b_prime)
@@ -102,5 +95,16 @@ class Belief:
             b = deepcopy(b_prime)
             printer(b)
 
+
+RIGHT = "R"
+LEFT = "L"
+GREEN = "G"
+RED = "R"
+num_states = 6
+roll_no = 2019101050
+x = 1 - ((roll_no % 10000) % 30 + 1) / 100
+y = (roll_no % 100) % 4
+pgg = 0.85
+prr = 0.9
 
 Belief()

@@ -20,7 +20,7 @@ class State:
         return f"(({self.a_x},{self.a_y}),({self.t_x},{self.t_y}),{self.call})"
 
     def get_a_pos(self):
-        return (self.a_x, self.a_y)
+        return self.a_x, self.a_y
 
     def set_a_pos(self, x):
         self.a_x = x[0]
