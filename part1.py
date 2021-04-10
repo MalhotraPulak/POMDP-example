@@ -28,16 +28,16 @@ def color(s):
 
 
 def O(new_state, a, o):
-    if o == GREEN:
-        if color(new_state) == GREEN:
+    if color(new_state) == GREEN:
+        if o == GREEN:
             return pgg
-        elif color(new_state) == RED:
+        elif o == RED:
             return 1 - pgg
         assert False
-    if o == RED:
-        if color(new_state) == RED:
+    if color(new_state) == RED:
+        if o == RED:
             return prr
-        elif color(new_state) == GREEN:
+        elif o == GREEN:
             return 1 - prr
         assert False
 
@@ -52,9 +52,8 @@ class Belief:
     def __init__(self):
         print("2019101050 2019101049")
         print(x, y)
-        debug = True
+        debug = False
         b = [1 / 3, 0, 1 / 3, 0, 0, 1 / 3]
-        printer(b)
         b_prime: List[float] = [0.0 for _ in range(num_states)]
         for a, o in [(RIGHT, GREEN), (LEFT, RED), (LEFT, GREEN)]:
             for new_state in range(num_states):
@@ -101,7 +100,7 @@ LEFT = "L"
 GREEN = "G"
 RED = "R"
 num_states = 6
-roll_no = 2019101050
+roll_no = 2019101009
 x = 1 - ((roll_no % 10000) % 30 + 1) / 100
 y = (roll_no % 100) % 4
 pgg = 0.85
