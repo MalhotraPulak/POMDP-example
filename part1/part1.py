@@ -44,14 +44,12 @@ def O(new_state, a, o):
 
 def printer(b):
     for i in range(num_states):
-        print("{:03f}".format(b[i]), end=" ")
-    print()
+        print("{:03f}".format(b[i]), end=" ", file=f)
+    print(file=f)
 
 
 class Belief:
     def __init__(self):
-        print("2019101050 2019101049")
-        print(x, y)
         debug = False
         b = [1 / 3, 0, 1 / 3, 0, 0, 1 / 3]
         b_prime: List[float] = [0.0 for _ in range(num_states)]
@@ -90,20 +88,24 @@ class Belief:
                 print()
                 print("Not normalized numerator", numerator)
                 print("Denominator", denominator)
+                print(b_prime)
                 print("-----------------------------------------")
             b = deepcopy(b_prime)
             printer(b)
 
 
-RIGHT = "R"
-LEFT = "L"
-GREEN = "G"
-RED = "R"
-num_states = 6
-roll_no = 2019101009
-x = 1 - ((roll_no % 10000) % 30 + 1) / 100
-y = (roll_no % 100) % 4
-pgg = 0.85
-prr = 0.9
-
-Belief()
+if __name__ == "__main__":
+    RIGHT = "R"
+    LEFT = "L"
+    GREEN = "G"
+    RED = "R"
+    num_states = 6
+    roll_no = 2019101050
+    x = 1 - ((roll_no % 10000) % 30 + 1) / 100
+    y = (roll_no % 100) % 4 + 1
+    pgg = 0.90
+    prr = 0.85
+    f = open("2019101050_2019101049.txt", "w+")
+    print("2019101050 2019101049", file=f)
+    print(x, y, file=f)
+    Belief()
