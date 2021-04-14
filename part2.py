@@ -17,7 +17,7 @@ class State:
         return idx
 
     def __str__(self):
-        return f"(({self.a_x},{self.a_y}),({self.t_x},{self.t_y}),{self.call})"
+        return f"S{self.a_y}{self.a_x}{self.t_y}{self.t_x}{self.call}"
 
     def get_a_pos(self):
         return self.a_x, self.a_y
@@ -165,7 +165,7 @@ class POMDP:
             for action in Actions:
                 rez = self.apply_transition(state, action)
                 for pr, res in rez:
-                    print(f"T: {action.value} : {state.get_id()} : {res.get_id()} {pr}", file=f)
+                    print(f"T: {action.name} : {str(state)} : {str(res)} {pr}", file=f)
 
     def observation_table(self):
         results = []
@@ -188,7 +188,7 @@ class POMDP:
             else:
                 results.append((Observations.o6, end_state))
         for obs, state in results:
-            print(f"O : * : {state.get_id()} : {obs.value} {1.0}", file=f)
+            print(f"O : * : {str(state)} : {obs.name} {1.0}", file=f)
 
     def reward_table(self):
         results = []
@@ -196,19 +196,20 @@ class POMDP:
             for state in self.states:
                 curr_obs = Observations(obs)
                 if curr_obs == Observations.o1 and state.call == 1:
-                    results.append((curr_obs, 20, state))
+                    results.append((curr_obs, reeward, state))
                 else:
                     results.append((curr_obs, -1, state))
         for obs, reward, state in results:
-            print(f"R: * : * : {state.get_id()}: {obs.value} {reward}", file=f)
+            print(f"R: * : * : {str(state)}: {obs.name} {reward}", file=f)
 
 
 if __name__ == "__main__":
     discount = 1
     states = []
-    roll_no = 2019101050
+    roll_no = 2019101009
     x = 1 - ((roll_no % 10000) % 30 + 1) / 100
     count = 0
+    reeward = (roll_no % 90 + 10)
     f = open("res.pomdp", "w")
     for a_x in range(4):
         for a_y in range(2):
@@ -222,11 +223,37 @@ if __name__ == "__main__":
     num_states = len(states)
     num_actions = len(Actions)
     num_observation = len(Observations)
-    print("discount: 0.9999", file=f)
+    print("discount: 0.5", file=f)
     print("values: reward", file=f)
-    print("states:", num_states, file=f)
-    print("actions:", num_actions, file=f)
-    print("observations:", num_observation, file=f)
+    print("states:", end=" ", file=f)
+    for state in states:
+        print(state, end=" ", file=f)
+    print(file=f)
+    print("actions:", end=" ", file=f)
+    for action in Actions:
+        print(action.name, end=" ", file=f)
+    print(file=f)
+    print("observations:", end=" ", file=f)
+    for obs in Observations:
+        print(obs.name, end=" ", file=f)
+    print(file=f)
+    print("start: ", end=" ", file=f)
+    count = 0
+    for state in states:
+        pos = (state.t_x, state.t_y)
+        a_pos = (state.a_x, state.a_y)
+        if a_pos == (1, 0) and not (pos == (0, 0) or pos == (1, 1) or pos == (1, 0)):
+            count += 1
+        else:
+            pass
+    for state in states:
+        pos = (state.t_x, state.t_y)
+        a_pos = (state.a_x, state.a_y)
+        if a_pos == (1, 0) and not (pos == (0, 0) or pos == (1, 1) or pos == (1, 0)):
+            print(1 / count, end=" ", file=f)
+        else:
+            print(0, end=" ", file=f)
+    print(file=f)
     p = POMDP(states)
     p.transition_table()
     p.observation_table()
