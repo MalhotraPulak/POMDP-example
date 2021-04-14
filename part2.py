@@ -6,49 +6,49 @@ from typing import List, Tuple
 
 class State:
     def __init__(self, a_x, a_y, t_x, t_y, call):
-        self.a_x: int = a_x
-        self.a_y: int = a_y
-        self.t_x: int = t_x
-        self.t_y: int = t_y
+        self.a_col: int = a_x
+        self.a_row: int = a_y
+        self.t_col: int = t_x
+        self.t_row: int = t_y
         self.call: int = call
 
     def get_id(self):
-        idx = 2 * (self.a_x * 16 + self.a_y * 8 + self.t_x * 2 + self.t_y) + self.call
+        idx = self.a_row * 64 + self.a_col * 16 + self.t_row * 8 + self.t_col * 2 + self.call
         return idx
 
     def __str__(self):
-        return f"S{self.a_y}{self.a_x}{self.t_y}{self.t_x}{self.call}"
+        return f"S{self.a_row}{self.a_col}{self.t_row}{self.t_col}{self.call}"
 
     def get_a_pos(self):
-        return self.a_x, self.a_y
+        return self.a_col, self.a_row
 
     def set_a_pos(self, x):
-        self.a_x = x[0]
-        self.a_y = x[1]
+        self.a_col = x[0]
+        self.a_row = x[1]
 
     def increase_x(self):
-        self.a_x = min(self.a_x + 1, 3)
+        self.a_col = min(self.a_col + 1, 3)
 
     def decrease_x(self):
-        self.a_x = max(self.a_x - 1, 0)
+        self.a_col = max(self.a_col - 1, 0)
 
     def increase_y(self):
-        self.a_y = min(self.a_y + 1, 1)
+        self.a_row = min(self.a_row + 1, 1)
 
     def decrease_y(self):
-        self.a_y = max(self.a_y - 1, 0)
+        self.a_row = max(self.a_row - 1, 0)
 
     def t_increase_x(self):
-        self.t_x = min(self.t_x + 1, 3)
+        self.t_col = min(self.t_col + 1, 3)
 
     def t_decrease_x(self):
-        self.t_x = max(self.t_x - 1, 0)
+        self.t_col = max(self.t_col - 1, 0)
 
     def t_increase_y(self):
-        self.t_y = min(self.t_y + 1, 1)
+        self.t_row = min(self.t_row + 1, 1)
 
     def t_decrease_y(self):
-        self.t_y = max(self.t_y - 1, 0)
+        self.t_row = max(self.t_row - 1, 0)
 
 
 class Actions(Enum):
@@ -165,12 +165,12 @@ class POMDP:
             for action in Actions:
                 rez = self.apply_transition(state, action)
                 for pr, res in rez:
-                    print(f"T: {action.name} : {str(state)} : {str(res)} {pr}", file=f)
+                    print(f"T: {action.name} : {str(state)} : {str(res)} {round(pr, 3)}", file=f)
 
     def observation_table(self):
         results = []
         for end_state in self.states:
-            pos_diff = (end_state.a_x - end_state.t_x, end_state.a_y - end_state.t_y)
+            pos_diff = (end_state.a_col - end_state.t_col, end_state.a_row - end_state.t_row)
             if pos_diff == (0, 0):
                 results.append((Observations.o1, end_state))
             elif pos_diff == (-1, 0):
@@ -198,9 +198,11 @@ class POMDP:
                 if curr_obs == Observations.o1 and state.call == 1:
                     results.append((curr_obs, reeward, state))
                 else:
-                    results.append((curr_obs, -1, state))
+                    pass
+        for state in self.states:
+            print(f"R : * : * : {str(state)}: * -1", file=f)
         for obs, reward, state in results:
-            print(f"R: * : * : {str(state)}: {obs.name} {reward}", file=f)
+            print(f"R : * : * : {str(state)}: {obs.name} {reward}", file=f)
 
 
 if __name__ == "__main__":
@@ -211,12 +213,12 @@ if __name__ == "__main__":
     count = 0
     reeward = (roll_no % 90 + 10)
     f = open("res.pomdp", "w")
-    for a_x in range(4):
-        for a_y in range(2):
-            for t_x in range(4):
-                for t_y in range(2):
+    for a_row in range(2):
+        for a_col in range(4):
+            for t_row in range(2):
+                for t_col in range(4):
                     for call in range(2):
-                        states.append(State(a_x, a_y, t_x, t_y, call))
+                        states.append(State(a_col, a_row, t_col, t_row, call))
                         assert count == states[-1].get_id()
                         count += 1
 
@@ -227,6 +229,7 @@ if __name__ == "__main__":
     print("values: reward", file=f)
     print("states:", end=" ", file=f)
     for state in states:
+        print(state)
         print(state, end=" ", file=f)
     print(file=f)
     print("actions:", end=" ", file=f)
@@ -237,23 +240,23 @@ if __name__ == "__main__":
     for obs in Observations:
         print(obs.name, end=" ", file=f)
     print(file=f)
-    print("start: ", end=" ", file=f)
+    print("start: ", file=f)
     count = 0
     for state in states:
-        pos = (state.t_x, state.t_y)
-        a_pos = (state.a_x, state.a_y)
+        pos = (state.t_col, state.t_row)
+        a_pos = (state.a_col, state.a_row)
         if a_pos == (1, 0) and not (pos == (0, 0) or pos == (1, 1) or pos == (1, 0)):
             count += 1
         else:
             pass
     for state in states:
-        pos = (state.t_x, state.t_y)
-        a_pos = (state.a_x, state.a_y)
+        pos = (state.t_col, state.t_row)
+        a_pos = (state.a_col, state.a_row)
         if a_pos == (1, 0) and not (pos == (0, 0) or pos == (1, 1) or pos == (1, 0)):
             print(1 / count, end=" ", file=f)
         else:
             print(0, end=" ", file=f)
-    print(file=f)
+    print("\n", file=f)
     p = POMDP(states)
     p.transition_table()
     p.observation_table()
