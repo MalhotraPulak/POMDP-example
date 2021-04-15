@@ -42,10 +42,34 @@ def O(new_state, a, o):
         assert False
 
 
+import math
+
+
+def truncate(number, decimals=0):
+    """
+    Returns a value truncated to a specific number of decimal places.
+    """
+    if not isinstance(decimals, int):
+        raise TypeError("decimal places must be an integer.")
+    elif decimals < 0:
+        raise ValueError("decimal places has to be 0 or more.")
+    elif decimals == 0:
+        return math.trunc(number)
+
+    factor = 10.0 ** decimals
+    return math.trunc(number * factor) / factor
+
+
 def printer(b):
     for i in range(num_states):
-        print("{:03f}".format(b[i]), end=" ", file=f)
+        print("{:.04f}".format(truncate(number=b[i], decimals=4)), end=" ", file=f)
     print(file=f)
+
+
+def printerr(b):
+    for i in range(num_states):
+        print("{:.04f}".format(b[i]), end=" ")
+    print()
 
 
 class Belief:
@@ -77,9 +101,11 @@ class Belief:
                 observation_prob = O(new_state, a, o)
                 b_prime[new_state] = sum_transition * observation_prob
                 if debug:
-                    print("sum of transitions", sum_transition)
-                    print(f"P(o={o}|a={a},s'={new_state}) = {observation_prob}")
-                    print(f"b_prime[{new_state}]= {round(sum_transition, 7)} * {round(observation_prob, 7)} = {round(b_prime[new_state], 7)}")
+                    print("  ")
+                    print("sum of transitions=", round(sum_transition, 7), " ")
+                    print(f"P(o={o}|a={a},s'={new_state}) = {round(observation_prob, 7)}  ")
+                    print(
+                        f"b_prime[{new_state}]= {round(sum_transition, 7)} * {round(observation_prob, 7)} = {round(b_prime[new_state], 7)}  ")
                     print()
             numerator = deepcopy(b_prime)
             denominator = sum(numerator)
@@ -87,11 +113,13 @@ class Belief:
                 b_prime[idx] = numerator[idx] / denominator
             if debug:
                 print()
-                print("Not normalized numerator")
-                print(numerator, "  ")
-                print("Denominator", denominator, "  ")
-                print("Updated Beliefs")
-                print(b_prime, "  ")
+                print("Not normalized numerator  ")
+                printerr(numerator)
+                print("  ")
+                print("Denominator", round(denominator, 7), " ")
+                print("Updated Beliefs  ")
+                printerr(b_prime)
+                print("  ")
             b = deepcopy(b_prime)
             printer(b)
 
@@ -105,7 +133,7 @@ if __name__ == "__main__":
     roll_no = 2019101050
     x = 1 - ((roll_no % 10000) % 30 + 1) / 100
     y = (roll_no % 100) % 4 + 1
-    pgg = 0.90
+    pgg = 0.9
     prr = 0.85
     debug = True
     f = open("2019101050_2019101049.txt", "w+")
