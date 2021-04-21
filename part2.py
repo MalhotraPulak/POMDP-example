@@ -66,7 +66,7 @@ class POMDP:
     def apply_transition(self, state: State, action):
         results = []
         # Agent Movements
-        # print(action)
+        # print("T1", state, action)
         if action == Actions.RIGHT:
             new_state = deepcopy(state)
             new_state.increase_x()
@@ -99,27 +99,29 @@ class POMDP:
             results.append((1, state))
         movements_results = []
         # APPLY TARGET MOVEMENT
-        for pr, state in results:
-            next_state: State = deepcopy(state)
+        # print("T2", state, action)
+
+        for pr, st in results:
+            next_state = deepcopy(st)
             # STAY
             movements_results.append((0.6 * pr, next_state))
             # RIGHT
-            next_state = deepcopy(state)
+            next_state = deepcopy(st)
             next_state.t_increase_x()
             movements_results.append((0.1 * pr, next_state))
             # LEFT
-            next_state = deepcopy(state)
+            next_state = deepcopy(st)
             next_state.t_decrease_x()
             movements_results.append((0.1 * pr, next_state))
             # DOWN
-            next_state = deepcopy(state)
+            next_state = deepcopy(st)
             next_state.t_increase_y()
             movements_results.append((0.1 * pr, next_state))
             # UP
-            next_state = deepcopy(state)
+            next_state = deepcopy(st)
             next_state.t_decrease_y()
             movements_results.append((0.1 * pr, next_state))
-
+        # print("T3", state, action)
         # FILTER MOVEMENT RESULTS
         filter_movements = []
         unique_states = set([st.get_id() for pr, st in movements_results])
@@ -128,27 +130,36 @@ class POMDP:
             for pr, st2 in movements_results:
                 if st2.get_id() == st:
                     prt += pr
-            filter_movements.append((prt, self.states[st]))
+            filter_movements.append((prt, deepcopy(self.states[st])))
 
         final_results: List[Tuple[float, State]] = []
+        # print("T4", state, action)
         if state.call == 0:
-            for pr, state in filter_movements:
+            for pr, st in filter_movements:
                 # CALL IS ON
-                next_state = deepcopy(state)
+                next_state = deepcopy(st)
                 final_results.append((pr * 0.5, next_state))
                 # CALL IS OFF
-                next_state = deepcopy(state)
+                next_state = deepcopy(st)
                 next_state.call = 1
                 final_results.append((pr * 0.5, next_state))
-        elif state.call == 1:
-            for pr, state in filter_movements:
+        elif state.call == 1 and (state.a_row, state.a_col) != (state.t_row, state.t_col):
+            # print("     FF", state, action)
+            for pr, st in filter_movements:
                 # CALL IS ON
-                next_state = deepcopy(state)
+                next_state = deepcopy(st)
                 final_results.append((pr * 0.9, next_state))
                 # CALL IS OFF
-                next_state = deepcopy(state)
+                next_state = deepcopy(st)
                 next_state.call = 0
                 final_results.append((pr * 0.1, next_state))
+        elif state.call == 1 and (state.a_row, state.a_col) == (state.t_row, state.t_col):
+            print("call is 0,", state, action)
+            for pr, st in filter_movements:
+                # CALL IS OFF
+                next_state = deepcopy(st)
+                next_state.call = 0
+                final_results.append((pr, next_state))
 
         # for idx, (_, st) in enumerate(final_results):
         #     for idx2, (_, st2) in enumerate(final_results):
@@ -161,11 +172,12 @@ class POMDP:
         return final_results
 
     def transition_table(self):
-        for state in self.states:
+        for stt in self.states:
             for action in Actions:
-                rez = self.apply_transition(state, action)
+                # print("State action pair", stt, action)
+                rez = self.apply_transition(stt, action)
                 for pr, res in rez:
-                    print(f"T: {action.name} : {str(state)} : {str(res)} {pr}", file=f)
+                    print(f"T: {action.name} : {str(stt)} : {str(res)} {pr}", file=f)
 
     def observation_table(self):
         results = []
@@ -228,62 +240,62 @@ if __name__ == "__main__":
     print("discount: 0.5", file=f)
     print("values: reward", file=f)
     print("states:", end=" ", file=f)
-    for state in states:
-        print(state, end=" ", file=f)
+    for statez in states:
+        print(statez, end=" ", file=f)
     print(file=f)
     print("actions:", end=" ", file=f)
-    for action in Actions:
-        print(action.name, end=" ", file=f)
+    for actionz in Actions:
+        print(actionz.name, end=" ", file=f)
     print(file=f)
     print("observations:", end=" ", file=f)
-    for obs in Observations:
-        print(obs.name, end=" ", file=f)
+    for obsz in Observations:
+        print(obsz.name, end=" ", file=f)
     print(file=f)
     print("start: ", file=f)
     count = 0
-    # for state in states:
-    #     pos = (state.t_row, state.t_col)
-    #     a_pos = (state.a_row, state.a_col)
-    #     if pos == (1, 0) and not (a_pos == (0, 0) or a_pos == (1, 1) or a_pos == (1, 0)):
-    #         count += 1
-    #     else:
-    #         pass
-    # for state in states:
-    #     pos = (state.t_row, state.t_col)
-    #     a_pos = (state.a_row, state.a_col)
-    #     if pos == (1, 0) and not (a_pos == (0, 0) or a_pos == (1, 1) or a_pos == (1, 0)):
-    #         print(state, 1/count)
-    #         print(1 / count, end=" ", file=f)
-    #     else:
-    #         print(state, 0)
-    #         print(0, end=" ", file=f)
-    # for state in states:
-    #     pos = (state.t_row, state.t_col)
-    #     a_pos = (state.a_row, state.a_col)
-    #     if a_pos == (1, 1) and (pos == (1, 0) or pos == (0, 1) or pos == (1, 2) or pos == (1, 1)) and state.call == 0:
-    #         count += 1
-    #     else:
-    #         pass
-    # for state in states:
-    #     pos = (state.t_row, state.t_col)
-    #     a_pos = (state.a_row, state.a_col)
-    #     if a_pos == (1, 1) and (pos == (1, 0) or pos == (0, 1) or pos == (1, 2) or pos == (1, 1)) and state.call == 0:
-    #         print(state, 1 / count)
-    #         print(1 / count, end=" ", file=f)
-    #     else:
-    #         print(state, 0)
-    #         print(0, end=" ", file=f)
     for state in states:
         pos = (state.t_row, state.t_col)
         a_pos = (state.a_row, state.a_col)
-        if a_pos == (0, 0) and (pos == (0, 1) or pos == (0, 2) or pos == (1, 1) or pos == (1, 2)):
-            print(state, 0.4 * 0.25 * 0.5)
-            print(0.4 * 0.25 * 0.5, end=" ", file=f)
-        elif a_pos == (1, 3) and (pos == (0, 1) or pos == (0, 2) or pos == (1, 1) or pos == (1, 2)):
-            print(state, 0.6 * 0.25 * 0.5)
-            print(0.6 * 0.25 * 0.5, end=" ", file=f)
+        if pos == (1, 0) and not (a_pos == (0, 0) or a_pos == (1, 1) or a_pos == (1, 0)):
+            count += 1
         else:
-            print(0.0, file=f, end=" ")
+            pass
+    for state in states:
+        pos = (state.t_row, state.t_col)
+        a_pos = (state.a_row, state.a_col)
+        if pos == (1, 0) and not (a_pos == (0, 0) or a_pos == (1, 1) or a_pos == (1, 0)):
+            print(state, 1/count)
+            print(1 / count, end=" ", file=f)
+        else:
+            print(state, 0)
+            print(0, end=" ", file=f)
+    # for state in states:
+    #     pos = (state.t_row, state.t_col)
+    #     a_pos = (state.a_row, state.a_col)
+    #     if a_pos == (1, 1) and (pos == (1, 0) or pos == (0, 1) or pos == (1, 2) or pos == (1, 1)) and state.call == 0:
+    #         count += 1
+    #     else:
+    #         pass
+    # for state in states:
+    #     pos = (state.t_row, state.t_col)
+    #     a_pos = (state.a_row, state.a_col)
+    #     if a_pos != (1, 1) or pos != (1, 0) and pos != (0, 1) and pos != (1, 2) and pos != (1, 1) or state.call != 0:
+    #         print(state, 0)
+    #         print(0, end=" ", file=f)
+    #     else:
+    #         print(state, 1 / count)
+    #         print(1 / count, end=" ", file=f)
+    # for state in states:
+    #     pos = (state.t_row, state.t_col)
+    #     a_pos = (state.a_row, state.a_col)
+    #     if a_pos == (0, 0) and (pos == (0, 1) or pos == (0, 2) or pos == (1, 1) or pos == (1, 2)):
+    #         print(state, 0.4 * 0.25 * 0.5)
+    #         print(0.4 * 0.25 * 0.5, end=" ", file=f)
+    #     elif a_pos == (1, 3) and (pos == (0, 1) or pos == (0, 2) or pos == (1, 1) or pos == (1, 2)):
+    #         print(state, 0.6 * 0.25 * 0.5)
+    #         print(0.6 * 0.25 * 0.5, end=" ", file=f)
+    #     else:
+    #         print(0.0, file=f, end=" ")
     print("\n", file=f)
     p = POMDP(states)
     p.transition_table()
