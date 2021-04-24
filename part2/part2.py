@@ -205,16 +205,18 @@ class POMDP:
     def reward_table(self):
         results = []
         for obs in range(len(Observations)):
-            for state in self.states:
+            for st in self.states:
                 curr_obs = Observations(obs)
-                if curr_obs == Observations.o1 and state.call == 1:
-                    results.append((curr_obs, reeward, state))
+                if curr_obs == Observations.o1 and st.call == 1 and (st.a_row, st.a_col) == (st.t_row, st.t_col):
+                    results.append((curr_obs, reeward - 1, st))
                 else:
                     pass
-        for state in self.states:
-            print(f"R : * : * : {str(state)}: * -1", file=f)
-        for obs, reward, state in results:
-            print(f"R : * : * : {str(state)}: {obs.name} {reward}", file=f)
+        print(f"R : * : * : * : * -1", file=f)
+        print(f"R : STAY : * : * : * 0", file=f)
+        for obs, reward, st in results:
+            print(f"R : * : * : {str(st)}: {obs.name} {reeward - 1}", file=f)
+        for obs, reward, st in results:
+            print(f"R : STAY : * : {str(st)}: {obs.name} {reeward}", file=f)
 
 
 if __name__ == "__main__":
@@ -224,7 +226,7 @@ if __name__ == "__main__":
     x = 1 - ((roll_no % 10000) % 30 + 1) / 100
     count = 0
     reeward = (roll_no % 90 + 10)
-    f = open("res.pomdp", "w")
+    f = open("pulak.pomdp", "w")
     for a_row in range(2):
         for a_col in range(4):
             for t_row in range(2):
@@ -264,7 +266,7 @@ if __name__ == "__main__":
         pos = (state.t_row, state.t_col)
         a_pos = (state.a_row, state.a_col)
         if pos == (1, 0) and not (a_pos == (0, 0) or a_pos == (1, 1) or a_pos == (1, 0)):
-            print(state, 1/count)
+            print(state, 1 / count)
             print(1 / count, end=" ", file=f)
         else:
             print(state, 0)
