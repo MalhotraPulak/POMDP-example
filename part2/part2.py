@@ -222,7 +222,7 @@ class POMDP:
 if __name__ == "__main__":
     discount = 1
     states = []
-    roll_no = 2019101050
+    roll_no = 2019111040
     x = 1 - ((roll_no % 10000) % 30 + 1) / 100
     count = 0
     reeward = (roll_no % 90 + 10)
